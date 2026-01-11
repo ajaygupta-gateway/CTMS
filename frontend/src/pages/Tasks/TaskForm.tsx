@@ -129,9 +129,29 @@ export default function TaskForm() {
                 await tasksApi.createTask(payload);
             }
             navigate('/tasks');
-        } catch (err) {
+        } catch (err: any) {
             console.error(err);
-            setError('Failed to save task');
+            const backendError = err.response?.data;
+            if (backendError && typeof backendError === 'object') {
+                // If the backend returns a detail string or a list of errors
+                if (backendError.detail) {
+                    setError(backendError.detail);
+                } else if (Array.isArray(backendError)) {
+                    setError(backendError.join(' '));
+                } else if (backendError.non_field_errors) {
+                    setError(backendError.non_field_errors.join(' '));
+                } else {
+                    // Try to extract field-specific errors
+                    const firstError = Object.values(backendError)[0];
+                    if (Array.isArray(firstError)) {
+                        setError(firstError.join(' '));
+                    } else {
+                        setError('Failed to save task: Validation error');
+                    }
+                }
+            } else {
+                setError('Failed to save task');
+            }
         } finally {
             setLoading(false);
         }

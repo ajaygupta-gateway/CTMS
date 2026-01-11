@@ -97,7 +97,7 @@ SPECTACULAR_SETTINGS = {
 
 
 SIMPLE_JWT = {
-    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=20),
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=3),
     "ROTATE_REFRESH_TOKENS": True, #A new refresh token is generated every time the refresh endpoint is called — not automatically every 15 minutes.
     "BLACKLIST_AFTER_ROTATION": True, #The old token is: Stored in blacklist table. Rejected forever

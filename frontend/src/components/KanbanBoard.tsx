@@ -22,6 +22,7 @@ import { Card, CardContent, CardHeader } from './ui/card';
 import { Button } from './ui/button';
 import { cn } from '../lib/utils';
 import { format } from 'date-fns';
+import { User } from 'lucide-react';
 
 // Simple droppable container
 import { useDroppable } from '@dnd-kit/core';
@@ -59,7 +60,11 @@ const DraggableTaskCard = ({ task }: { task: Task }) => {
                     </div>
                 </CardHeader>
                 <CardContent className="p-3 pt-2">
-                    <div className="flex justify-between text-xs text-muted-foreground mt-2">
+                    <div className="flex items-center text-[10px] text-muted-foreground mb-1">
+                        <User className="mr-1 h-2.5 w-2.5" />
+                        <span className="truncate">{task.assigned_to_user}</span>
+                    </div>
+                    <div className="flex justify-between text-xs text-muted-foreground">
                         <span>{task.estimated_hours}h</span>
                         {task.deadline && <span>{format(new Date(task.deadline), 'MMM d')}</span>}
                     </div>
@@ -132,11 +137,30 @@ export default function KanbanBoard() {
 
         try {
             await tasksApi.updateTask(taskId, { status: newStatus });
-        } catch (error) {
+        } catch (error: any) {
             console.error("Update failed", error);
             // Rollback
             setTasks(prev => prev.map(t => t.id === taskId ? { ...t, status: oldStatus } : t));
-            alert('Failed to update task status');
+
+            const backendError = error.response?.data;
+            let message = 'Failed to update task status';
+
+            if (backendError && typeof backendError === 'object') {
+                if (backendError.detail) {
+                    message = backendError.detail;
+                } else if (Array.isArray(backendError)) {
+                    message = backendError.join(' ');
+                } else if (backendError.non_field_errors) {
+                    message = backendError.non_field_errors.join(' ');
+                } else {
+                    const firstError = Object.values(backendError)[0];
+                    if (Array.isArray(firstError)) {
+                        message = firstError.join(' ');
+                    }
+                }
+            }
+
+            alert(message);
         }
     };
 

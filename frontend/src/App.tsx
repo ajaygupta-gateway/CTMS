@@ -7,10 +7,12 @@ import TasksList from './pages/Tasks/TasksList';
 import TaskForm from './pages/Tasks/TaskForm';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
+import CaptchaModal from './components/CaptchaModal';
 
 function App() {
     return (
         <BrowserRouter>
+            <CaptchaModal />
             <Routes>
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/register" element={<RegisterPage />} />

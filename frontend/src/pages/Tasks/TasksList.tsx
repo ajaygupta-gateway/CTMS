@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom'; // Removed Link from imports if 
 import { Link } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Plus, Calendar, Clock, Trash2 } from 'lucide-react';
+import { Plus, Calendar, Clock, Trash2, User } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../context/AuthContext';
 
@@ -144,6 +144,10 @@ export default function TasksList() {
                                 <div className="flex items-center">
                                     <Clock className="mr-1 h-3 w-3" />
                                     {task.estimated_hours}h est.
+                                </div>
+                                <div className="flex items-center">
+                                    <User className="mr-1 h-3 w-3" />
+                                    {task.assigned_to_user}
                                 </div>
                                 {task.deadline && (
                                     <div className="flex items-center">
