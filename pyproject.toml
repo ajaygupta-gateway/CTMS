@@ -1,0 +1,40 @@
+[project]
+name = "ctms"
+version = "0.1.0"
+description = "Conditional Task Management System backend"
+readme = "README.md"
+requires-python = ">=3.14"
+
+dependencies = [
+    # Core framework
+    "Django>=5.0,<6.0",
+
+    # Django REST Framework
+    "djangorestframework==3.16.1",
+
+    # JWT authentication (custom implementation uses this internally)
+    "djangorestframework-simplejwt>=5.3.1",
+
+    # Environment variables
+    "python-dotenv>=1.0.1",
+
+    # Timezone handling (developer time-based permissions). Used to convert time into a specific timezone
+    "pytz>=2024.1",
+
+    # Database (PostgreSQL)
+    "psycopg2-binary==2.9.11",
+
+    # Caching & rate limiting (Redis backend)
+    "django-redis>=5.4.0",
+
+    # Nested routing (optional but allowed by your structure)
+    "drf-nested-routers>=0.95.0",
+
+    # Notifications / background-ready utilities
+    "asgiref>=3.8.1",
+
+    # CSV / document exports (admin reports)
+    "python-docx>=1.1.2",
+
+    "drf-spectacular",
+]
