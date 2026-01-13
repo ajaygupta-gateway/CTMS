@@ -3,6 +3,8 @@ import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, CheckSquare, LogOut, User, ListChecks } from 'lucide-react';
 import { Button } from './ui/button';
 import { cn } from '../lib/utils';
+import NotificationBell from './NotificationBell';
+
 
 export default function Layout() {
     const { user, logout } = useAuth();
@@ -100,8 +102,18 @@ export default function Layout() {
             </aside>
 
             {/* Main Content */}
-            <main className="flex-1 bg-background p-6 overflow-auto">
-                <Outlet />
+            <main className="flex-1 bg-background overflow-auto">
+                {/* Header with Notification Bell */}
+                <div className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4">
+                    <div className="flex items-center justify-end">
+                        <NotificationBell />
+                    </div>
+                </div>
+
+                {/* Page Content */}
+                <div className="p-6">
+                    <Outlet />
+                </div>
             </main>
         </div>
     );
