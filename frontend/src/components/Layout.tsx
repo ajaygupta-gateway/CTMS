@@ -1,15 +1,25 @@
 import { useAuth } from '../context/AuthContext';
-import { Link, Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, CheckSquare, LogOut, User } from 'lucide-react';
+import { Link, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { LayoutDashboard, CheckSquare, LogOut, User, ListChecks } from 'lucide-react';
 import { Button } from './ui/button';
+import { cn } from '../lib/utils';
 
 export default function Layout() {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
 
     const handleLogout = () => {
         logout();
         navigate('/login');
+    };
+
+    // Helper function to check if a route is active
+    const isActive = (path: string) => {
+        if (path === '/') {
+            return location.pathname === '/';
+        }
+        return location.pathname.startsWith(path);
     };
 
     return (
@@ -21,14 +31,58 @@ export default function Layout() {
                     <p className="text-sm text-slate-400">Task Management</p>
                 </div>
                 <nav className="p-4 space-y-2">
-                    <Link to="/" className="flex items-center space-x-2 p-2 hover:bg-slate-800 rounded">
-                        <LayoutDashboard size={20} />
+                    {/* Dashboard Link */}
+                    <Link
+                        to="/"
+                        className={cn(
+                            "flex items-center space-x-3 p-3 rounded-lg transition-all duration-200 relative group",
+                            isActive('/')
+                                ? "bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg shadow-blue-500/50 font-semibold"
+                                : "hover:bg-slate-800 text-slate-300 hover:text-white"
+                        )}
+                    >
+                        {isActive('/') && (
+                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-white rounded-r-full" />
+                        )}
+                        <LayoutDashboard size={20} className={cn(isActive('/') && "animate-pulse")} />
                         <span>Dashboard</span>
                     </Link>
-                    <Link to="/tasks" className="flex items-center space-x-2 p-2 hover:bg-slate-800 rounded">
-                        <CheckSquare size={20} />
+
+                    {/* Tasks Link */}
+                    <Link
+                        to="/tasks"
+                        className={cn(
+                            "flex items-center space-x-3 p-3 rounded-lg transition-all duration-200 relative group",
+                            isActive('/tasks') && !location.pathname.includes('bulk-update')
+                                ? "bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg shadow-blue-500/50 font-semibold"
+                                : "hover:bg-slate-800 text-slate-300 hover:text-white"
+                        )}
+                    >
+                        {isActive('/tasks') && !location.pathname.includes('bulk-update') && (
+                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-white rounded-r-full" />
+                        )}
+                        <CheckSquare size={20} className={cn(isActive('/tasks') && !location.pathname.includes('bulk-update') && "animate-pulse")} />
                         <span>Tasks</span>
                     </Link>
+
+                    {/* Bulk Update Link */}
+                    {user?.role !== 'auditor' && (
+                        <Link
+                            to="/tasks/bulk-update"
+                            className={cn(
+                                "flex items-center space-x-3 p-3 rounded-lg transition-all duration-200 relative group",
+                                location.pathname.includes('bulk-update')
+                                    ? "bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg shadow-blue-500/50 font-semibold"
+                                    : "hover:bg-slate-800 text-slate-300 hover:text-white"
+                            )}
+                        >
+                            {location.pathname.includes('bulk-update') && (
+                                <div className="absolute left-0 top-0 bottom-0 w-1 bg-white rounded-r-full" />
+                            )}
+                            <ListChecks size={20} className={cn(location.pathname.includes('bulk-update') && "animate-pulse")} />
+                            <span>Bulk Update</span>
+                        </Link>
+                    )}
                 </nav>
                 <div className="p-4 border-t border-slate-800 mt-auto">
                     <div className="flex items-center space-x-2 mb-2">

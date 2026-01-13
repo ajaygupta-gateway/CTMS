@@ -1,6 +1,7 @@
 import uuid
 
 from django.utils.timezone import now
+from django.conf import settings
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
@@ -142,7 +143,7 @@ class AuthLoginViewSet(viewsets.ModelViewSet):
             key="refresh_token",
             value=str(refresh),
             httponly=True,
-            secure=True,
+            secure=not settings.DEBUG,
             samesite="Lax",
         )
 
@@ -151,7 +152,7 @@ class AuthLoginViewSet(viewsets.ModelViewSet):
             key="device_id",
             value=device_id,
             httponly=True,
-            secure=True,
+            secure=not settings.DEBUG,
             samesite="Lax",
         )
 
@@ -195,7 +196,7 @@ class AuthRefreshViewSet(viewsets.ModelViewSet):
             key="refresh_token",
             value=str(new_refresh),
             httponly=True,
-            secure=True,
+            secure=not settings.DEBUG,
             samesite="Lax",
         )
 

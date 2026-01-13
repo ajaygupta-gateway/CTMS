@@ -74,7 +74,7 @@ const DraggableTaskCard = ({ task }: { task: Task }) => {
     );
 };
 
-export default function KanbanBoard() {
+export default function KanbanBoard({ initialTasks }: { initialTasks?: Task[] }) {
     const { user } = useAuth();
     const [tasks, setTasks] = useState<Task[]>([]);
     const [activeTask, setActiveTask] = useState<Task | null>(null);
@@ -88,8 +88,14 @@ export default function KanbanBoard() {
     );
 
     useEffect(() => {
-        loadMyTasks();
-    }, []);
+        // If initialTasks provided, use them
+        if (initialTasks && initialTasks.length > 0) {
+            setTasks(initialTasks);
+        } else if (!initialTasks) {
+            // Otherwise fetch from API
+            loadMyTasks();
+        }
+    }, [initialTasks]);
 
     const loadMyTasks = async () => {
         try {

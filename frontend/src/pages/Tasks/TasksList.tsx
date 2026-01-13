@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom'; // Removed Link from imports if 
 import { Link } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Plus, Calendar, Clock, Trash2, User } from 'lucide-react';
+import { Plus, Calendar, Clock, Trash2, User, ListChecks } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../context/AuthContext';
 
@@ -75,20 +75,29 @@ export default function TasksList() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <h2 className="text-3xl font-bold tracking-tight">Tasks</h2>
-                {user?.role !== 'auditor' && (
-                    <div className="relative group">
-                        <Link to="/tasks/new" className={!canCreateTask ? 'pointer-events-none' : ''}>
-                            <Button disabled={!canCreateTask}>
-                                <Plus className="mr-2 h-4 w-4" /> Create Task
-                            </Button>
-                        </Link>
-                        {createButtonTooltip && (
-                            <div className="absolute bottom-full mb-2 right-0 hidden group-hover:block bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10">
-                                {createButtonTooltip}
+                <div className="flex gap-2">
+                    {user?.role !== 'auditor' && (
+                        <>
+                            <Link to="/tasks/bulk-update">
+                                <Button variant="outline">
+                                    <ListChecks className="mr-2 h-4 w-4" /> Bulk Update
+                                </Button>
+                            </Link>
+                            <div className="relative group">
+                                <Link to="/tasks/new" className={!canCreateTask ? 'pointer-events-none' : ''}>
+                                    <Button disabled={!canCreateTask}>
+                                        <Plus className="mr-2 h-4 w-4" /> Create Task
+                                    </Button>
+                                </Link>
+                                {createButtonTooltip && (
+                                    <div className="absolute bottom-full mb-2 right-0 hidden group-hover:block bg-gray-900 text-white text-xs rounded py-1 px-2 whitespace-nowrap z-10">
+                                        {createButtonTooltip}
+                                    </div>
+                                )}
                             </div>
-                        )}
-                    </div>
-                )}
+                        </>
+                    )}
+                </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">

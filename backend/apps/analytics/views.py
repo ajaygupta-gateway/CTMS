@@ -18,7 +18,7 @@ class TaskAnalyticsViewSet(viewsets.ModelViewSet):
     """
 
     permission_classes = [IsAuthenticated]
-    queryset = []  # IMPORTANT: prevents accidental data exposure
+    queryset = []  # prevents accidental data exposure
     http_method_names = ["get"]
 
     def list(self, request, *args, **kwargs):

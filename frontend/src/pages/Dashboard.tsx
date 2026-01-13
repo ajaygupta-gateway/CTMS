@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { tasksApi } from '../api/tasks';
-import type { AnalyticsData } from '../types';
+import type { AnalyticsData, Task } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Activity, Users, CheckCircle } from 'lucide-react';
 import KanbanBoard from '../components/KanbanBoard';
@@ -8,12 +8,30 @@ import DependencyGraph from '../components/DependencyGraph';
 
 export default function Dashboard() {
     const [data, setData] = useState<AnalyticsData | null>(null);
+    const [tasks, setTasks] = useState<Task[]>([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        tasksApi.getAnalytics().then((res) => setData(res.data)).catch(console.error);
+        const fetchData = async () => {
+            try {
+                // Fetch both analytics and tasks in parallel
+                const [analyticsRes, tasksRes] = await Promise.all([
+                    tasksApi.getAnalytics(),
+                    tasksApi.getTasks()
+                ]);
+                setData(analyticsRes.data);
+                setTasks(tasksRes.data);
+            } catch (error) {
+                console.error("Failed to load dashboard data", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
     }, []);
 
-    if (!data) return <div>Loading dashboard...</div>;
+    if (loading) return <div>Loading dashboard...</div>;
+    if (!data) return <div>Failed to load dashboard data</div>;
 
     return (
         <div className="space-y-6">
@@ -61,8 +79,8 @@ export default function Dashboard() {
             </div>
 
             <div className="grid grid-cols-1 gap-8">
-                <KanbanBoard />
-                <DependencyGraph />
+                <KanbanBoard initialTasks={tasks} />
+                <DependencyGraph initialTasks={tasks} />
             </div>
         </div>
     );

@@ -5,6 +5,7 @@ import VerifyEmailPage from './pages/VerifyEmail';
 import Dashboard from './pages/Dashboard';
 import TasksList from './pages/Tasks/TasksList';
 import TaskForm from './pages/Tasks/TaskForm';
+import BulkUpdate from './pages/Tasks/BulkUpdate';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/ProtectedRoute';
 import CaptchaModal from './components/CaptchaModal';
@@ -23,6 +24,7 @@ function App() {
                         <Route path="/" element={<Dashboard />} />
                         <Route path="/tasks" element={<TasksList />} />
                         <Route path="/tasks/new" element={<TaskForm />} />
+                        <Route path="/tasks/bulk-update" element={<BulkUpdate />} />
                         <Route path="/tasks/:id" element={<TaskForm />} />
                     </Route>
                 </Route>

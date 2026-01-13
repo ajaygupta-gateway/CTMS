@@ -12,22 +12,28 @@ import 'reactflow/dist/style.css';
 import { tasksApi } from '../api/tasks';
 import type { Task } from '../types';
 
-const GraphContent = () => {
+const GraphContent = ({ initialTasks }: { initialTasks?: Task[] }) => {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
     useEffect(() => {
-        const loadTasks = async () => {
-            try {
-                const response = await tasksApi.getTasks();
-                setTasks(response.data);
-            } catch (error) {
-                console.error("Failed to load tasks for graph", error);
-            }
-        };
-        loadTasks();
-    }, []);
+        // If initialTasks provided, use them
+        if (initialTasks && initialTasks.length > 0) {
+            setTasks(initialTasks);
+        } else if (!initialTasks) {
+            // Otherwise fetch from API
+            const loadTasks = async () => {
+                try {
+                    const response = await tasksApi.getTasks();
+                    setTasks(response.data);
+                } catch (error) {
+                    console.error("Failed to load tasks for graph", error);
+                }
+            };
+            loadTasks();
+        }
+    }, [initialTasks]);
 
     useEffect(() => {
         if (tasks.length === 0) return;
@@ -117,12 +123,12 @@ const GraphContent = () => {
     );
 };
 
-export default function DependencyGraph() {
+export default function DependencyGraph({ initialTasks }: { initialTasks?: Task[] }) {
     return (
         <div className="space-y-4">
             <h2 className="text-2xl font-bold">Task Dependency Graph</h2>
             <ReactFlowProvider>
-                <GraphContent />
+                <GraphContent initialTasks={initialTasks} />
             </ReactFlowProvider>
         </div>
     );
