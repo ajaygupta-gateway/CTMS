@@ -50,6 +50,7 @@ export default function VerifyEmailPage() {
                                 onChange={(e) => setToken(e.target.value)}
                                 required
                                 placeholder="Enter token here"
+                                disabled={loading}
                             />
                         </div>
                     </CardContent>

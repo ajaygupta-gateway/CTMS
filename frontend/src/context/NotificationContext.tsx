@@ -88,7 +88,11 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
      * Add a new notification
      */
     const addNotification = useCallback((notification: Notification) => {
-        setNotifications(prev => [notification, ...prev]);
+        setNotifications(prev => {
+            // Deduplicate to avoid showing same notification twice
+            if (prev.some(n => n.id === notification.id)) return prev;
+            return [notification, ...prev];
+        });
         if (!notification.read) {
             setUnreadCount(prev => prev + 1);
         }

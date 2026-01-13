@@ -11,7 +11,7 @@
 export interface Notification {
     id: number;
     message: string;
-    notification_type: 'status_change' | 'deadline_warning' | 'task_assigned';
+    notification_type: 'status_change' | 'deadline_warning' | 'task_assigned' | 'task_unassigned';
     task_id: number;
     task_title?: string;
     task_status?: string;
@@ -29,6 +29,7 @@ class WebSocketService {
     private listeners: NotificationCallback[] = [];
     private isConnecting = false;
     private token: string | null = null;
+    private processedIds = new Set<number>();
 
     /**
      * Connect to WebSocket server
@@ -118,7 +119,9 @@ class WebSocketService {
         console.log(`Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`);
 
         setTimeout(() => {
-            this.connect(this.token!);
+            if (this.token) {
+                this.connect(this.token);
+            }
         }, delay);
     }
 
@@ -126,6 +129,19 @@ class WebSocketService {
      * Handle incoming notification
      */
     private handleNotification(notification: Notification) {
+        // Deduplicate notifications
+        if (this.processedIds.has(notification.id)) {
+            console.log('Duplicate notification ignored:', notification.id);
+            return;
+        }
+
+        this.processedIds.add(notification.id);
+        // Keep set size manageable
+        if (this.processedIds.size > 100) {
+            const iterator = this.processedIds.values();
+            this.processedIds.delete(iterator.next().value!);
+        }
+
         console.log('Received notification:', notification);
 
         // Show browser notification if permission granted

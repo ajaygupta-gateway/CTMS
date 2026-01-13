@@ -9,6 +9,7 @@ class Notification(models.Model):
         ('status_change', 'Status Change'),
         ('deadline_warning', 'Deadline Warning'),
         ('task_assigned', 'Task Assigned'),
+        ('task_unassigned', 'Task Unassigned'),
     )
     
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')

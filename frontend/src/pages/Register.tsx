@@ -14,6 +14,7 @@ export default function RegisterPage() {
         confirmPassword: '',
     });
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
     const { register } = useAuth();
     const navigate = useNavigate();
 
@@ -24,9 +25,11 @@ export default function RegisterPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        setLoading(true);
 
         if (formData.password !== formData.confirmPassword) {
             setError('Passwords do not match');
+            setLoading(false);
             return;
         }
 
@@ -47,6 +50,8 @@ export default function RegisterPage() {
         } catch (err: any) {
             console.error(err);
             setError('Registration failed. Please try again.');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -67,6 +72,7 @@ export default function RegisterPage() {
                                 value={formData.username}
                                 onChange={handleChange}
                                 required
+                                disabled={loading}
                             />
                         </div>
                         <div className="space-y-2">
@@ -77,6 +83,7 @@ export default function RegisterPage() {
                                 value={formData.email}
                                 onChange={handleChange}
                                 required
+                                disabled={loading}
                             />
                         </div>
                         <div className="space-y-2">
@@ -87,6 +94,7 @@ export default function RegisterPage() {
                                 value={formData.password}
                                 onChange={handleChange}
                                 required
+                                disabled={loading}
                             />
                         </div>
                         <div className="space-y-2">
@@ -97,11 +105,14 @@ export default function RegisterPage() {
                                 value={formData.confirmPassword}
                                 onChange={handleChange}
                                 required
+                                disabled={loading}
                             />
                         </div>
                     </CardContent>
                     <CardFooter className="flex flex-col space-y-2">
-                        <Button type="submit" className="w-full">Register</Button>
+                        <Button type="submit" className="w-full" disabled={loading}>
+                            {loading ? 'Registering...' : 'Register'}
+                        </Button>
                         <div className="text-sm text-center">
                             Already have an account? <Link to="/login" className="text-blue-500 hover:underline">Login</Link>
                         </div>

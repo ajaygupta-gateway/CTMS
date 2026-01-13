@@ -14,7 +14,7 @@ interface NotificationPanelProps {
  */
 export default function NotificationPanel({ onClose }: NotificationPanelProps) {
     const navigate = useNavigate();
-    const { notifications, markAsRead, markAllAsRead, unreadCount } = useNotifications();
+    const { notifications, markAsRead, markAllAsRead, unreadCount, clearNotifications } = useNotifications();
     const panelRef = useRef<HTMLDivElement>(null);
 
     // Close panel when clicking outside
@@ -142,12 +142,12 @@ export default function NotificationPanel({ onClose }: NotificationPanelProps) {
                 <div className="p-3 border-t border-gray-200 bg-gray-50">
                     <button
                         onClick={() => {
-                            navigate('/notifications');
-                            onClose();
+                            markAllAsRead();
+                            clearNotifications();
                         }}
-                        className="w-full text-sm text-blue-600 hover:text-blue-800 font-medium"
+                        className="w-full text-sm text-red-600 hover:text-red-800 font-medium"
                     >
-                        View all notifications
+                        Clear all notifications
                     </button>
                 </div>
             )}

@@ -63,7 +63,34 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         await self.accept()
         
         # Send any pending undelivered notifications
-        await self.send_pending_notifications()
+        pending_notifications = await self.get_pending_notifications()
+        for notification in pending_notifications:
+            await self.send(text_data=json.dumps({
+                'type': 'notification',
+                'notification': notification
+            }))
+            # Mark as delivered
+            await self.mark_notification_delivered(notification['id'])
+
+    @database_sync_to_async
+    def get_pending_notifications(self):
+        """Get undelivered notifications as a list of dictionaries."""
+        notifications = Notification.objects.filter(
+            user=self.user,
+            is_delivered=False
+        ).order_by('created_at')[:50]
+        
+        results = []
+        for n in notifications:
+            results.append({
+                'id': n.id,
+                'message': n.message,
+                'notification_type': n.notification_type,
+                'task_id': n.task_id,
+                'created_at': n.created_at.isoformat(),
+                'read': n.read,
+            })
+        return results
     
     async def disconnect(self, close_code):
         """
@@ -126,32 +153,7 @@ class NotificationConsumer(AsyncWebsocketConsumer):
         except User.DoesNotExist:
             return None
     
-    @database_sync_to_async
-    def send_pending_notifications(self):
-        """Send any undelivered notifications to the user."""
-        notifications = Notification.objects.filter(
-            user=self.user,
-            is_delivered=False
-        ).order_by('created_at')[:50]  # Limit to 50 most recent
-        
-        for notification in notifications:
-            # Send via async method
-            import asyncio
-            asyncio.create_task(self.send(text_data=json.dumps({
-                'type': 'notification',
-                'notification': {
-                    'id': notification.id,
-                    'message': notification.message,
-                    'notification_type': notification.notification_type,
-                    'task_id': notification.task_id,
-                    'created_at': notification.created_at.isoformat(),
-                    'read': notification.read,
-                }
-            })))
-            
-            # Mark as delivered
-            notification.is_delivered = True
-            notification.save()
+
     
     @database_sync_to_async
     def mark_notification_read(self, notification_id):

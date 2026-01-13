@@ -7,25 +7,33 @@ from .models import Notification
 
 
 @receiver(pre_save, sender=Task)
-def track_status_change(sender, instance, **kwargs):
+def track_state_change(sender, instance, **kwargs):
     """
-    Track the previous status before saving to detect changes.
+    Track previous status and assignee before saving to detect changes.
     """
     if instance.pk:
         try:
-            instance._previous_status = Task.objects.get(pk=instance.pk).status
+            previous = Task.objects.get(pk=instance.pk)
+            instance._previous_status = previous.status
+            instance._previous_assigned_to = previous.assigned_to
         except Task.DoesNotExist:
             instance._previous_status = None
+            instance._previous_assigned_to = None
     else:
         instance._previous_status = None
+        instance._previous_assigned_to = None
 
 
 @receiver(post_save, sender=Task)
-def send_status_change_notification(sender, instance, created, **kwargs):
+def send_task_notification(sender, instance, created, **kwargs):
     """
-    Send notification when a task's status changes.
-    Only notify the assigned user if the status changed.
+    Send notification when:
+    1. Task is created (assigned user)
+    2. Task status changes (assigned user)
+    3. Task is reassigned (new assigned user)
     """
+    notified_users = set()
+
     if created:
         # Task was just created - send assignment notification
         notification = Notification.objects.create(
@@ -37,19 +45,45 @@ def send_status_change_notification(sender, instance, created, **kwargs):
         send_notification_to_user(instance.assigned_to.id, notification)
         return
     
+    # Check if assignee changed
+    previous_assigned_to = getattr(instance, '_previous_assigned_to', None)
+    if previous_assigned_to and previous_assigned_to != instance.assigned_to:
+        # 1. Notify the PREVIOUS user (Unassigned)
+        notification_unassigned = Notification.objects.create(
+            user=previous_assigned_to,
+            task=instance,
+            message=f"You have been unassigned from task: {instance.title}",
+            notification_type='task_unassigned'
+        )
+        send_notification_to_user(previous_assigned_to.id, notification_unassigned)
+        notified_users.add(previous_assigned_to.id)
+
+        # 2. Notify the NEW user (Assigned) - if there is one (not None)
+        if instance.assigned_to:
+            notification_assigned = Notification.objects.create(
+                user=instance.assigned_to,
+                task=instance,
+                message=f"You have been assigned a task: {instance.title}",
+                notification_type='task_assigned'
+            )
+            send_notification_to_user(instance.assigned_to.id, notification_assigned)
+            notified_users.add(instance.assigned_to.id)
+    
     # Check if status changed
     previous_status = getattr(instance, '_previous_status', None)
     if previous_status and previous_status != instance.status:
         # Status changed - notify the assigned user
-        status_display = dict(Task.STATUS_CHOICES).get(instance.status, instance.status)
-        
-        notification = Notification.objects.create(
-            user=instance.assigned_to,
-            task=instance,
-            message=f"Task '{instance.title}' status changed to {status_display}",
-            notification_type='status_change'
-        )
-        send_notification_to_user(instance.assigned_to.id, notification)
+        # Only notify if we haven't already sent an assignment notification to this user
+        if instance.assigned_to and instance.assigned_to.id not in notified_users:
+            status_display = dict(Task.STATUS_CHOICES).get(instance.status, instance.status)
+            
+            notification = Notification.objects.create(
+                user=instance.assigned_to,
+                task=instance,
+                message=f"Task '{instance.title}' status changed to {status_display}",
+                notification_type='status_change'
+            )
+            send_notification_to_user(instance.assigned_to.id, notification)
 
 
 def send_notification_to_user(user_id, notification):
@@ -78,10 +112,8 @@ def send_notification_to_user(user_id, notification):
                 'notification': notification_data
             }
         )
-        # If successfully sent, mark as delivered
-        notification.is_delivered = True
-        notification.save()
+        # Note: We do NOT mark as delivered here. 
+        # The Consumer will mark it as delivered upon actual sending.
     except Exception as e:
-        # If sending fails (user offline), notification remains in DB
-        # with is_delivered=False and will be sent when user connects
+        # If sending fails, it remains in DB with is_delivered=False
         print(f"Failed to send notification to user {user_id}: {e}")

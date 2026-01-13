@@ -1,23 +1,45 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { tasksApi } from '../../api/tasks';
 import type { Task, TaskStatus, TaskPriority } from '../../types';
-import { useNavigate } from 'react-router-dom'; // Removed Link from imports if replaced by card click, but might keep for Create button
+import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
 import { Plus, Calendar, Clock, Trash2, User, ListChecks } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../context/AuthContext';
+import { useNotifications } from '../../context/NotificationContext';
 
 export default function TasksList() {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [loading, setLoading] = useState(true);
     const { user } = useAuth();
     const navigate = useNavigate();
+    const { notifications } = useNotifications();
+    const lastProcessedNotificationRef = useRef<number | null>(null);
 
     useEffect(() => {
         loadTasks();
     }, []);
+
+    // Listen for real-time updates via notifications
+    useEffect(() => {
+        if (notifications.length > 0) {
+            const latest = notifications[0]; // Newest is at index 0
+
+            // Avoid processing the same notification multiple times
+            if (lastProcessedNotificationRef.current === latest.id) return;
+            lastProcessedNotificationRef.current = latest.id;
+
+            if (latest.notification_type === 'task_unassigned') {
+                // Immediately remove task from list
+                setTasks(prev => prev.filter(t => t.id !== latest.task_id));
+            } else if (latest.notification_type === 'task_assigned' || latest.notification_type === 'status_change') {
+                // Reload list for new assignments or status changes
+                loadTasks();
+            }
+        }
+    }, [notifications]);
 
     const loadTasks = async () => {
         try {

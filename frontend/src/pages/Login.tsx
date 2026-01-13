@@ -10,6 +10,7 @@ export default function LoginPage() {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
@@ -19,12 +20,15 @@ export default function LoginPage() {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
+        setLoading(true);
         try {
             await login({ username, password });
             navigate(from, { replace: true });
         } catch (err: any) {
             console.error(err);
             setError('Invalid username or password');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -45,6 +49,7 @@ export default function LoginPage() {
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
                                 required
+                                disabled={loading}
                             />
                         </div>
                         <div className="space-y-2">
@@ -55,11 +60,14 @@ export default function LoginPage() {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
+                                disabled={loading}
                             />
                         </div>
                     </CardContent>
                     <CardFooter className="flex flex-col space-y-2">
-                        <Button type="submit" className="w-full">Login</Button>
+                        <Button type="submit" className="w-full" disabled={loading}>
+                            {loading ? 'Logging in...' : 'Login'}
+                        </Button>
                         <div className="text-sm text-center">
                             Don't have an account? <Link to="/register" className="text-blue-500 hover:underline">Register</Link>
                         </div>

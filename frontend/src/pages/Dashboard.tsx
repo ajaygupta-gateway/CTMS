@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
+import { useNotifications } from '../context/NotificationContext';
 import { tasksApi } from '../api/tasks';
 import type { AnalyticsData, Task } from '../types';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -11,24 +12,42 @@ export default function Dashboard() {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [loading, setLoading] = useState(true);
 
+    const { notifications } = useNotifications();
+    const lastProcessedNotificationRef = useRef<number | null>(null);
+
+    const fetchData = async () => {
+        try {
+            // Fetch both analytics and tasks in parallel
+            const [analyticsRes, tasksRes] = await Promise.all([
+                tasksApi.getAnalytics(),
+                tasksApi.getTasks()
+            ]);
+            setData(analyticsRes.data);
+            setTasks(tasksRes.data);
+        } catch (error) {
+            console.error("Failed to load dashboard data", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchData = async () => {
-            try {
-                // Fetch both analytics and tasks in parallel
-                const [analyticsRes, tasksRes] = await Promise.all([
-                    tasksApi.getAnalytics(),
-                    tasksApi.getTasks()
-                ]);
-                setData(analyticsRes.data);
-                setTasks(tasksRes.data);
-            } catch (error) {
-                console.error("Failed to load dashboard data", error);
-            } finally {
-                setLoading(false);
-            }
-        };
         fetchData();
     }, []);
+
+    // Auto-refresh on notifications
+    useEffect(() => {
+        if (notifications.length > 0) {
+            const latest = notifications[0];
+
+            if (lastProcessedNotificationRef.current === latest.id) return;
+            lastProcessedNotificationRef.current = latest.id;
+
+            if (['task_assigned', 'task_unassigned', 'status_change'].includes(latest.notification_type)) {
+                fetchData();
+            }
+        }
+    }, [notifications]);
 
     if (loading) return <div>Loading dashboard...</div>;
     if (!data) return <div>Failed to load dashboard data</div>;
